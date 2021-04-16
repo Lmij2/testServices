@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DSSGBOAdmin.Models.BLL;
-using DSSGBOAdmin.Models.Entities;
+using AdminServiceGBO.Models.BLL;
+using AdminServiceGBO.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DSSGBOAdmin.Controllers
+namespace AdminServiceGBO.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -25,91 +25,75 @@ namespace DSSGBOAdmin.Controllers
                     Organization organization = BLL_Organization.SelectById(id);
                     if (organization != null && organization.Id > 0)
                     {
-                        return Json(new { success = true, message = "Organisation trouvée", data = organization });
+                        return Json(new { success = true, message = "Organization found", data = organization });
                     }
                     else
                     {
-                        return Json(new { success = false, message = "Organisation introuvable.", data = organization });
+                        return Json(new { success = false, message = "Organization not found", data = organization });
                     }
                 }
                 else if (idString.ToLower().Equals("all"))
                 {
-                    List<Organization> Organizations = BLL_Organization.SelectAll();
-                    return Json(new { success = true, message = "Organisations trouvées", data = Organizations });
+                    List<Organization> Demands = BLL_Organization.SelectAll();
+                    return Json(new { success = true, message = "Organization found", data = Demands });
                 }
-                return Json(new { success = false, message = "Paramètre : ' " + idString + " ' invalide. " });
+                return Json(new { success = false, message = "Parameter request : ' " + idString + " ' invalide. " });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
-        [Route("Version2/{Id}")]
-        [HttpGet]
-        public IActionResult Get(long Id)
-        {
-            try
-            {
-                Organization organization;
-                organization = BLL_Organization.SelectById(Id);
-                if (organization == null)
-                {
-                    return NotFound("Organisation introuvable.");
-                }
-                else
-                {
-                    return Ok(organization);
-                }
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-            }
-        }
-        [Route("")]
+
+        [Route("add")]
+        //[ValidateAntiForgeryToken]
         [HttpPost]
         public JsonResult Post([FromForm] Organization organization)
         {
             try
             {
                 BLL_Organization.Add(organization);
-                return Json(new { success = true, message = "Organisation ajouté avec success" });
+                return Json(new { success = true, message = "Ajouté avec success" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: "+ ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
 
-        [Route("{id:long}")]
-        [HttpPut]
-        public JsonResult Put(long id,[FromBody] Organization organization)
+        [Route("{id}")]
+        [HttpPost]
+        //[ValidateAntiForgeryToken]
+        public JsonResult Put(string id, Organization organization)
         {
             try
             {
-                BLL_Organization.Update(id,organization);
-                return Json(new { success = true, message = "Organisation modifié avec succès" });
+                BLL_Organization.Update(long.Parse(id),organization);
+                return Json(new { success = true, message = "Modifié avec succès" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
 
         // DELETE api/<OrganizationController>/5
         [Route("{id:long}")]
-        [HttpDelete]
+        [HttpDelete()]
         public JsonResult Delete(long id)
         {
             try
             {
                 BLL_Organization.Delete(id);
-                return Json(new { success = true, message = "Organisation supprimé avec succès" });
+                return Json(new { success = true, message = "Supprimé avec succès" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
+
+
+
     }
 }

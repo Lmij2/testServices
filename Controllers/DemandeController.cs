@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DSSGBOAdmin.Models.BLL;
-using DSSGBOAdmin.Models.Entities;
+using AdminServiceGBO.Models.BLL;
+using AdminServiceGBO.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace DSSGBOAdmin.Controllers
+namespace AdminServiceGBO.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -48,11 +49,11 @@ namespace DSSGBOAdmin.Controllers
                         return Json(new { success = true, message = "Pas de Demands dans la base de données", data = Demands });
                     }
                 }
-                return Json(new { success = false, message = " Le paramètre de la request : (' " + idString + " ')  est invalide. " });
+                return Json(new { success = false, message = " Le paramètre de la request : (' " + idString + " ')  est invalide. "});
             }
             catch (Exception e)
             {
-                return Json(new { success = false, message = e.Message });
+                return Json(new { success = false, message = e.Message});
             }
         }
 
@@ -70,7 +71,7 @@ namespace DSSGBOAdmin.Controllers
                 BLL_Demande.Add(demande);
                 return Json(new { success = true, message = "Ajouté avec success" });
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });
             }
@@ -85,7 +86,7 @@ namespace DSSGBOAdmin.Controllers
             try
             {
                 demande.RegDemandDecisionDate = DateTime.Now.ToShortDateString();
-                BLL_Demande.Update(id, demande, OrganizationSystemPrefix);
+                BLL_Demande.Update(id,demande, OrganizationSystemPrefix); 
                 return Json(new { success = true, message = "modifié avec success" });
             }
             catch (Exception ex)
@@ -93,6 +94,26 @@ namespace DSSGBOAdmin.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
 
+        }
+
+
+        //[ValidateAntiForgeryToken]
+        [Route("/api/auth")]
+        [HttpPost]
+        public JsonResult Login(User user)
+        {
+            try
+            {
+                User userLogged = BLL_User.loggingUser(user.Email, user.PassWord);
+                if (userLogged == null)
+                    throw new Exception("Utilisateur pas trouve, verifiez vos informations");
+
+                return Json(new { success = true, message = "Utilisateur trouve", data = userLogged });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
     }

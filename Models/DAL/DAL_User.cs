@@ -1,27 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DSSGBOAdmin.Models.Entities;
+using AdminServiceGBO.Models.Entities;
 using MyUtilities;
 using System.Data;
 using System.Data.SqlClient;
-using System.Security.Cryptography;
 
-namespace DSSGBOAdmin.Models.DAL
+namespace AdminServiceGBO.Models.DAL
 {
     public class DAL_User
     {
         // insert user
         public static long Add(User user)
         {
-            if (!CheckEntityUnicityName(user.Name,user.IdOrganization))
-            {
-                throw new MyException("Erreur de la base de données", "Le nom d'utilisateur doit être unique.", "DAL");
-            }
-            if(!CheckEntityUnicityEmail(user.Email, user.IdOrganization))
-            {
-                throw new MyException("Erreur de la base de données", "L'e-mail d'utilisateur doit être unique.", "DAL");
-            }
             using (SqlConnection con = DBConnection.GetAuthConnection())
             {
                 string StrSQL = "INSERT INTO [User] (Name,Email,PassWord,IdOrganization,Role,AccountCreationDate) " +
@@ -36,56 +27,10 @@ namespace DSSGBOAdmin.Models.DAL
                 command.Parameters.Add("@AccountCreationDate", SqlDbType.Date).Value = user.AccountCreationDate;
                 return Convert.ToInt64(DataBaseAccessUtilities.ScalarRequest(command));
             }
-            //using (SqlConnection con = DBConnection.GetAuthConnection())
-            //{
-            //    string StrSQL = "INSERT INTO [User] (Name,Email,PassWord,IdOrganization,Role,AccountCreationDate) VALUES(@Name,@Email,@PassWord,@IdOrganization,@Role,@AccountCreationDate)";
-            //    SqlCommand command = new SqlCommand(StrSQL, con);
-            //    command.Parameters.Add("@Name", SqlDbType.NVarChar).Value = user.Name;
-            //    command.Parameters.Add("@Email", SqlDbType.NVarChar).Value = user.Email;
-            //    command.Parameters.Add("@PassWord", SqlDbType.NVarChar).Value = ProtectPassword(user.PassWord);
-            //    command.Parameters.Add("@IdOrganization", SqlDbType.BigInt).Value = user.IdOrganization;
-            //    command.Parameters.Add("@Role", SqlDbType.NVarChar).Value = user.Role;
-            //    command.Parameters.Add("@AccountCreationDate", SqlDbType.Date).Value = user.AccountCreationDate;
-            //    return Convert.ToInt64(DataBaseAccessUtilities.ScalarRequest(command));
-            //}
-        }
-        // cryptage Password By RSA triple DES ALG
-        public static string ProtectPassword(string clearPassword)
-        {
-            //clearPassword = "GBOAdmin";
-            byte[] bytes = Encoding.UTF8.GetBytes(clearPassword);
-            byte[] protectedBytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
-            //string test = Convert.ToBase64String(protectedBytes);
-            //System.Diagnostics.Debug.WriteLine("adduserhash=" + test);
-            return Convert.ToBase64String(protectedBytes);
-        }
-        // Decryptage Password By RSA triple DES ALG
-        public static string UnprotectPassword(string protectedPassword)
-        {
-            //protectedPassword = "AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAKyXeKmq/d0uEQU/YuOTLSQAAAAACAAAAAAAQZgAAAAEAACAAAAAcIVvrAum2N+96RlSy6uye6PykhxM/27vh8iVZO/fYpwAAAAAOgAAAAAIAACAAAAAkdmeBqT/dQeGqsoqD269WCY3b+fyS18s1KnW59j2VABAAAABHFhhwskaKkfwUrUeS9J3NQAAAAL+dlQJquC6k8eoO22sr+Whz56e7L8PHv3KRKUmM+MdImyQpF8R7WzPAIV5Ll7zrOlHw0gyIV10ix3mxXxeVgOg=";
-            byte[] protectedBytes = Convert.FromBase64String(protectedPassword);
-            byte[] bytes = ProtectedData.Unprotect(protectedBytes, null, DataProtectionScope.CurrentUser);
-            System.Diagnostics.Debug.WriteLine("adduserdecryptage=" + Encoding.UTF8.GetString(bytes));
-            return Encoding.UTF8.GetString(bytes);
         }
         // update user
         public static void Update(long id, User user)
         {
-            var olduser = SelectById(id);
-            if (olduser.IdOrganization == user.IdOrganization && olduser.Name != user.Name)
-            {
-                if (!CheckEntityUnicityName(user.Name, user.IdOrganization))
-                {
-                    throw new MyException("Erreur de la base de données", "Le nom d'utilisateur doit être unique.", "DAL");
-                }
-            }
-            if (olduser.IdOrganization == user.IdOrganization && olduser.Email != user.Email)
-            {
-                if (!CheckEntityUnicityEmail(user.Email, user.IdOrganization))
-                {
-                    throw new MyException("Erreur de la base de données", "L'e-mail d'utilisateur doit être unique.", "DAL");
-                }
-            }
             using (SqlConnection con = DBConnection.GetAuthConnection())
             {
                 string StrSQL = "UPDATE [User] SET Name=@Name,Email=@Email,PassWord=@PassWord,Role=@Role WHERE Id = @CurId";
@@ -93,7 +38,7 @@ namespace DSSGBOAdmin.Models.DAL
                 command.Parameters.Add("@CurId", SqlDbType.BigInt).Value = id;
                 command.Parameters.Add("@Name", SqlDbType.NVarChar).Value = user.Name;
                 command.Parameters.Add("@Email", SqlDbType.NVarChar).Value = user.Email;
-                command.Parameters.Add("@PassWord", SqlDbType.NVarChar).Value = ProtectPassword(user.PassWord);
+                command.Parameters.Add("@PassWord", SqlDbType.NVarChar).Value = user.PassWord;
                 command.Parameters.Add("@Role", SqlDbType.NVarChar).Value = user.Role;
                 DataBaseAccessUtilities.NonQueryRequest(command);
             }
@@ -108,6 +53,44 @@ namespace DSSGBOAdmin.Models.DAL
                 DataBaseAccessUtilities.NonQueryRequest(command);
             }
         }
+
+        // select one record of table user
+        public static User SelectByField(string Field, string Value)
+        {
+            User user = null;
+
+            using (SqlConnection connection = DBConnection.GetAuthConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    string StrSQL = "SELECT * FROM [User] WHERE "+Field+" = @Value";
+                    SqlCommand command = new SqlCommand(StrSQL, connection);
+                    command.Parameters.Add("@Value", SqlDbType.VarChar).Value = Value;
+                    SqlDataReader dataReader = command.ExecuteReader();
+                    if (dataReader.Read())
+                    {
+                        user = new User();
+                        user.Id = dataReader.GetInt64(0);
+                        user.IdOrganization = long.Parse(dataReader["IdOrganization"].ToString());
+                        user.Name = dataReader["Name"].ToString();
+                        user.Email = dataReader["Email"].ToString();
+                        user.PassWord = dataReader["PassWord"].ToString();
+                        user.Role = dataReader["Role"].ToString();
+                    }
+                }
+                catch (SqlException e)
+                {
+                    throw new MyException(e, "Database Error", e.Message, "DAL");
+                }
+                finally
+                {
+                    connection.Close();
+                }
+                return user;
+            }
+        }
+
         // select one record of table user
         public static User SelectById(long id)
         {
@@ -124,13 +107,12 @@ namespace DSSGBOAdmin.Models.DAL
                     SqlDataReader dataReader = command.ExecuteReader();
                     if (dataReader.Read())
                     {
-                        user.Id = Convert.ToInt64(dataReader["Id"]);
-                        user.IdOrganization = Convert.ToInt64(dataReader["IdOrganization"]);
+                        user.Id = dataReader.GetInt64(0);
+                        user.IdOrganization = long.Parse(dataReader["IdOrganization"].ToString());
                         user.Name = dataReader["Name"].ToString();
                         user.Email = dataReader["Email"].ToString();
-                        user.PassWord = UnprotectPassword(dataReader["PassWord"].ToString());
+                        user.PassWord = dataReader["PassWord"].ToString();
                         user.Role = dataReader["Role"].ToString();
-                      
                     }
                 }
                 catch (SqlException e)
@@ -161,12 +143,12 @@ namespace DSSGBOAdmin.Models.DAL
                     while (dataReader.Read())
                     {
                         user = new User();
-                        user.Id = Convert.ToInt64(dataReader["Id"]);
-                        user.IdOrganization = Convert.ToInt64(dataReader["IdOrganization"]);
+                        user.Id = dataReader.GetInt64(0);
+                        user.IdOrganization = long.Parse(dataReader["IdOrganization"].ToString());
                         user.Name = dataReader["Name"].ToString();
                         user.Email = dataReader["Email"].ToString();
-                        user.PassWord = UnprotectPassword(dataReader["PassWord"].ToString());
-                        user.Role = dataReader["Role"].ToString();                 
+                        user.PassWord = dataReader["PassWord"].ToString();
+                        user.Role = dataReader["Role"].ToString();
                         Users.Add(user);
                     }
                 }
@@ -181,7 +163,7 @@ namespace DSSGBOAdmin.Models.DAL
                 return Users;
             }
         }
-        public static List<User> TestConnexion(string UserName,string Password, out string message)
+        public static List<User> TestConnexion(String UserName,string Password, out string message)
         {
             User user;
             List<User> users = new List<User>();
@@ -191,32 +173,28 @@ namespace DSSGBOAdmin.Models.DAL
                 try
                 {
                     connection.Open();
-                    string StrSQL = "SELECT [User].Id,[User].Name,[User].Email,[User].Role,[User].IdOrganization,Organization.NameFr,Organization.OrganisationLogo,Organization.AffiliationLogo,Organization.AffiliationLogo,Organization.ParDiffusionEmail,Organization.ParDiffusionEmailPW,PassWord,OrganizationSystemPrefix FROM [User],Organization WHERE Organization.Id=[User].IdOrganization AND Name=@Name";
+                    string StrSQL = "SELECT [User].Id,[User].Name,[User].Email,[User].Role,[User].IdOrganization,Organization.NameFr,Organization.OrganisationLogo,Organization.AffiliationLogo,Organization.AffiliationLogo,Organization.ParDiffusionEmail,Organization.ParDiffusionEmailPW FROM [User],Organization WHERE Organization.Id=[User].IdOrganization AND Name=@Name AND PassWord=@PassWord";
                     SqlCommand command = new SqlCommand(StrSQL, connection);
                     command.Parameters.Add("@Name", SqlDbType.NVarChar).Value = UserName;
+                    command.Parameters.Add("@PassWord", SqlDbType.NVarChar).Value = Password;
                     SqlDataReader dataReader = command.ExecuteReader();
                     while (dataReader.Read())
                     {
-                        string pass = UnprotectPassword(dataReader["PassWord"].ToString());
-                        if (pass == Password)
-                        {
-                            user = new User();
-                            user.Id = Convert.ToInt64(dataReader["Id"]);
-                            user.IdOrganization = Convert.ToInt64(dataReader["IdOrganization"]);
-                            user.Name = dataReader["Name"].ToString();
-                            user.Email = dataReader["Email"].ToString();
-                            user.PassWord = dataReader["NameFr"].ToString();
-                            user.Role = dataReader["Role"].ToString();
-                            user.OrganisationLogoUser = dataReader["OrganisationLogo"].ToString();
-                            user.AffiliationLogoUser = dataReader["AffiliationLogo"].ToString();
-                            user.EmailOrganisation = dataReader["ParDiffusionEmail"].ToString();
-                            user.PasswordOrganisation = dataReader["ParDiffusionEmailPW"].ToString();
-                            user.OrganizationSystemPrefix = dataReader["OrganizationSystemPrefix"].ToString();
-                            users.Add(user);
-                            testconnection = true;
-                            //System.Diagnostics.Debug.WriteLine("user.OrganizationSystemPrefix="+ user.OrganizationSystemPrefix);
-                        }
-                        
+                        user = new User();
+                        user.Id = dataReader.GetInt64(0);
+                        user.IdOrganization = long.Parse(dataReader["IdOrganization"].ToString());
+                        user.Name = dataReader["Name"].ToString();
+                        user.Email = dataReader["Email"].ToString();
+                        user.PassWord = dataReader["NameFr"].ToString();
+                        user.Role = dataReader["Role"].ToString();
+                        user.OrganisationLogoUser = dataReader["OrganisationLogo"].ToString();
+                        user.AffiliationLogoUser = dataReader["AffiliationLogo"].ToString();
+                        user.EmailOrganisation = dataReader["ParDiffusionEmail"].ToString();
+                        user.PasswordOrganisation = dataReader["ParDiffusionEmailPW"].ToString();
+                        System.Diagnostics.Debug.WriteLine("EmailOrganisation=" + user.EmailOrganisation);
+                        System.Diagnostics.Debug.WriteLine("PasswordOrganisation=" + user.PasswordOrganisation);
+                        users.Add(user);
+                        testconnection = true;
                     }
                     if (testconnection)
                     {
@@ -231,7 +209,7 @@ namespace DSSGBOAdmin.Models.DAL
                 {
                     message = e.Message;
                     System.Diagnostics.Debug.WriteLine("message10=" + message);
-                    new MyException(e, "Database Error", message, "DAL");     
+                    new MyException(e, "Database Error", e.Message, "DAL");     
                 }
                 finally
                 {
@@ -260,12 +238,13 @@ namespace DSSGBOAdmin.Models.DAL
                     while (dataReader.Read())
                     {
                         user = new User();
-                        user.Id = Convert.ToInt64(dataReader["Id"]);
-                        user.IdOrganization = Convert.ToInt64(dataReader["IdOrganization"]);
+                        user.Id = dataReader.GetInt64(0);
+                        user.IdOrganization = long.Parse(dataReader["IdOrganization"].ToString());
                         user.Name = dataReader["Name"].ToString();
                         user.Email = dataReader["NameFr"].ToString();
-                        user.PassWord = UnprotectPassword(dataReader["PassWord"].ToString());
-                        user.Role = dataReader["Role"].ToString();                     
+                        user.PassWord = dataReader["PassWord"].ToString();
+                        user.Role = dataReader["Role"].ToString();
+                        System.Diagnostics.Debug.WriteLine("IdOrganization=" + user.IdOrganization);
                         users.Add(user);
                         testconnection = true;
                     }
@@ -281,6 +260,7 @@ namespace DSSGBOAdmin.Models.DAL
                 catch (SqlException e)
                 {
                     message = e.Message;
+                    System.Diagnostics.Debug.WriteLine("message=" + message);
                     new MyException(e, "Database Error", e.Message, "DAL");
                 }
                 finally
@@ -308,7 +288,7 @@ namespace DSSGBOAdmin.Models.DAL
             else
                 return false;
         }
-        public static bool CheckEmailUnicity(string Email,long IdOrganization)
+        public static bool CheckNameUnicityEmail(string Email,long IdOrganization)
         {
             return CheckEntityUnicityEmail(Email, IdOrganization);
         }
@@ -330,7 +310,7 @@ namespace DSSGBOAdmin.Models.DAL
             else
                 return false;
         }
-        public static bool CheckNameUnicity(string Name, long IdOrganization)
+        public static bool CheckNameUnicityName(string Name, long IdOrganization)
         {
             return CheckEntityUnicityName(Name, IdOrganization);
         }

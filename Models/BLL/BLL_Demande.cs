@@ -1,13 +1,14 @@
-﻿using DSSGBOAdmin.Models.DAL;
-using DSSGBOAdmin.Models.Entities;
+﻿using AdminServiceGBO.Models.DAL;
+using AdminServiceGBO.Models.Entities;
 using MyUtilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace DSSGBOAdmin.Models.BLL
+namespace AdminServiceGBO.Models.BLL
 {
     public class BLL_Demande
     {
@@ -20,7 +21,7 @@ namespace DSSGBOAdmin.Models.BLL
             DAL_Demande.selectByField("email", Email);
 
         }
-
+        
         public static void CheckNameUnicityName(string Name)
         {
 
@@ -49,24 +50,25 @@ namespace DSSGBOAdmin.Models.BLL
                 try
                 {
                     Organization newOrganization = new Organization(
-                    0, demande.Name,null,demande.Name.Substring(0,3)+id, null, demande.Affiliation, null, demande.FieldOfActivity, demande.Adress,
+                    0, demande.Name, "", "", "", demande.Affiliation, "", demande.FieldOfActivity, demande.Adress,
                     demande.PostalCode, demande.City, demande.Country, demande.Email, demande.Phone,
                     demande.PersonToContact, demande.ContactMail, demande.ContactPhone, demande.ContactPosition,
-                    demande.Email, "", null, null, "Essai", "Inactive", OrganizationSystemPrefix);
+                    "", "", "", "", "essai", "inactive", OrganizationSystemPrefix);
 
                     newOrgId = BLL_Organization.Add(newOrganization);
-                    OrgCreated = true;
+                    if (newOrgId > 0)
+                        OrgCreated = true;
+                    else
+                        throw new MyException("Erreur Base De Données", "Erreur Lors de la creation de l'organisation", "BLL");
 
-                    if (newOrgId == 0)
-                        throw new MyException("Erreur Base De Données", "Erreur Lors de la creation de l'organisation " + newOrgId, "BLL");
 
-
-                    User AdminOrg = new User(0, newOrgId, "Admin" + newOrganization.NameFr.ToUpper(), newOrganization.Email,
-                       DAL_User.ProtectPassword(newOrganization.NameFr), "Administrateur", DateTime.Today, null, null, demande.Email, null);
+                    User AdminOrg = new User(0, newOrgId, "admin" + newOrganization.NameFr.ToUpper(), newOrganization.Email,
+                        "1", "admin", DateTime.Now, "", "", demande.Email, "");
 
                     Iduser = BLL_User.Add(AdminOrg);
-                    UserCreated = true;
-                    if (Iduser == 0)
+                    if (Iduser > 0)
+                        UserCreated = true;
+                    else
                         throw new MyException("Erreur Base De Données", "Erreur Lors de la creation du nouveau utilisateur", "BLL");
 
                     string responseCreationDB = CreateDatabaseIfNotExists(OrganizationSystemPrefix + "DB");
@@ -74,25 +76,25 @@ namespace DSSGBOAdmin.Models.BLL
                         DbCreated = true;
                     else
                         throw new MyException("Erreur Base De Données", "Erreur Creation de la base de données : " + responseCreationDB, "BLL");
-                    //try
-                    //{
-                    //    CreateFolderGBO(OrganizationSystemPrefix + "Docs");
-                    //}
-                    //catch (Exception ex) { }
+                    try
+                    {
+                        CreateFolderGBO(OrganizationSystemPrefix + "Docs");
+                    }
+                    catch (Exception ex){}
 
                     DAL_Demande.UpdateDemande(id, demande);
                 }
                 catch (Exception ex)
                 {
                     if (DbCreated)
-                        DeleteDatabaseIfExists(OrganizationSystemPrefix + "DB");
+                            DeleteDatabaseIfExists(OrganizationSystemPrefix + "DB");
 
                     if (UserCreated)
-                        BLL_User.Delete(Iduser);
+                            BLL_User.Delete(Iduser);
 
                     if (OrgCreated)
-                        BLL_Organization.Delete(newOrgId);
-
+                            BLL_Organization.Delete(newOrgId);
+                    
                     throw ex;
                 }
             }
@@ -142,7 +144,7 @@ namespace DSSGBOAdmin.Models.BLL
         {
             DAL_Demande.DeleteDemande(id);
         }
-
+        
         public static Demande SelectById(long id)
         {
             return DAL_Demande.selectByField("Id", "" + id);

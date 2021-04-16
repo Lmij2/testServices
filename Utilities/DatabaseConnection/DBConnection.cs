@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Data.Sql;
 using System.Data.SqlClient;
 using System.IO;
 using System.Security.Principal;
 using System.Security.AccessControl;
 
 public static class DBConnection
-{ 
-    static string DbCnnStrAuth = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=GBOAuthDB;Data Source=DESKTOP-KSGLTG1";
+{
+    static string DbCnnStrAuth = "Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=TestPFE;Data Source=DESKTOP-GNL06UC\\SQLEXPRESS";
+    static string DbCnnStr = "Integrated Security=SSPI;Data Source=DESKTOP-GNL06UC\\SQLEXPRESS";
+
     public static SqlConnection GetAuthConnection()
     {
         return new SqlConnection(DbCnnStrAuth);
     }
-    // Dynamic data base GBO
-    static string DbCnnStr = "Integrated Security=SSPI;Data Source=DESKTOP-KSGLTG1";
     public static string CreateDatabase(string dbName)
     {
         string message = null;
@@ -48,7 +44,7 @@ public static class DBConnection
         finally
         {
             System.Diagnostics.Debug.WriteLine("create10");
-            if (connection != null)
+            if(connection != null)
                 connection.Close();
         }
         return message;
@@ -202,4 +198,5 @@ public static class DBConnection
         System.Diagnostics.Debug.WriteLine("result=" + result);
         return result;
     }
+
 }

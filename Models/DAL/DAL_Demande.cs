@@ -1,4 +1,4 @@
-﻿using DSSGBOAdmin.Models.Entities;
+﻿using AdminServiceGBO.Models.Entities;
 using MyUtilities;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DSSGBOAdmin.Models.DAL
+namespace AdminServiceGBO.Models.DAL
 {
     public class DAL_Demande
     {
@@ -94,23 +94,23 @@ namespace DSSGBOAdmin.Models.DAL
                     "@Name,@Affiliation,@FieldOfActivity,@Adress,@PostalCode,@City,@Country,@Email,@Phone,@PersonToContact,@ContactMail,@ContactPhone,@ContactPosition,@RegDemandDate,@RegDemandDecision,@RegDemandDecisionDate,@RegDecisionComments)";
 
                 SqlCommand MySqlCommand = new SqlCommand(StrSQL, con);
-                MySqlCommand.Parameters.Add("@Name", SqlDbType.NVarChar).Value = newDemande.Name;
-                MySqlCommand.Parameters.Add("@Affiliation", SqlDbType.NVarChar).Value = newDemande.Affiliation ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@FieldOfActivity", SqlDbType.NVarChar).Value = newDemande.FieldOfActivity ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@Adress", SqlDbType.NVarChar).Value = newDemande.Adress ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@PostalCode", SqlDbType.NVarChar).Value = newDemande.PostalCode ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@City", SqlDbType.NVarChar).Value = newDemande.City ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@Country", SqlDbType.NVarChar).Value = newDemande.Country ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@Email", SqlDbType.NVarChar).Value = newDemande.Email ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@Phone", SqlDbType.NVarChar).Value = newDemande.Phone ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@PersonToContact", SqlDbType.NVarChar).Value = newDemande.PersonToContact ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@ContactMail", SqlDbType.NVarChar).Value = newDemande.ContactMail ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@ContactPhone", SqlDbType.NVarChar).Value = newDemande.ContactPhone ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@ContactPosition", SqlDbType.NVarChar).Value = newDemande.ContactPosition ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@Name", SqlDbType.VarChar).Value = newDemande.Name;
+                MySqlCommand.Parameters.Add("@Affiliation", SqlDbType.VarChar).Value = newDemande.Affiliation ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@FieldOfActivity", SqlDbType.VarChar).Value = newDemande.FieldOfActivity ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@Adress", SqlDbType.VarChar).Value = newDemande.Adress ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@PostalCode", SqlDbType.VarChar).Value = newDemande.PostalCode ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@City", SqlDbType.VarChar).Value = newDemande.City ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@Country", SqlDbType.VarChar).Value = newDemande.Country ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@Email", SqlDbType.VarChar).Value = newDemande.Email ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@Phone", SqlDbType.VarChar).Value = newDemande.Phone ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@PersonToContact", SqlDbType.VarChar).Value = newDemande.PersonToContact ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@ContactMail", SqlDbType.VarChar).Value = newDemande.ContactMail ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@ContactPhone", SqlDbType.VarChar).Value = newDemande.ContactPhone ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@ContactPosition", SqlDbType.VarChar).Value = newDemande.ContactPosition ?? (object)DBNull.Value;
                 MySqlCommand.Parameters.Add("@RegDemandDate", SqlDbType.Date).Value = newDemande.RegDemandDate ?? (object)DBNull.Value;
-                MySqlCommand.Parameters.Add("@RegDemandDecision", SqlDbType.NVarChar).Value = newDemande.RegDemandDecision ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@RegDemandDecision", SqlDbType.VarChar).Value = newDemande.RegDemandDecision ?? (object)DBNull.Value; ;
                 MySqlCommand.Parameters.Add("@RegDemandDecisionDate", SqlDbType.Date).Value = newDemande.RegDemandDecisionDate == null ? (object)DBNull.Value : newDemande.RegDemandDecisionDate;
-                MySqlCommand.Parameters.Add("@RegDecisionComments", SqlDbType.NVarChar).Value = newDemande.RegDecisionComments ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@RegDecisionComments", SqlDbType.VarChar).Value = newDemande.RegDecisionComments ?? (object)DBNull.Value;
                 DataBaseAccessUtilities.NonQueryRequest(MySqlCommand);
 
             }
@@ -141,9 +141,10 @@ namespace DSSGBOAdmin.Models.DAL
                 " where Id = @currId";
                 SqlCommand MySqlCommand = new SqlCommand(StrSQL, con);
                 MySqlCommand.Parameters.Add("@currId", SqlDbType.BigInt).Value = Id;
-                MySqlCommand.Parameters.Add("@RegDemandDecision", SqlDbType.NVarChar).Value = newDemande.RegDemandDecision ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@RegDemandDecision", SqlDbType.VarChar).Value = newDemande.RegDemandDecision ?? (object)DBNull.Value; ;
                 MySqlCommand.Parameters.Add("@RegDemandDecisionDate", SqlDbType.Date).Value = newDemande.RegDemandDecisionDate == null ? (object)DBNull.Value : newDemande.RegDemandDecisionDate;
-                MySqlCommand.Parameters.Add("@RegDecisionComments", SqlDbType.NVarChar).Value = newDemande.RegDecisionComments ?? (object)DBNull.Value;
+                MySqlCommand.Parameters.Add("@RegDecisionComments", SqlDbType.VarChar).Value = newDemande.RegDecisionComments ?? (object)DBNull.Value;
+
                 DataBaseAccessUtilities.NonQueryRequest(MySqlCommand);
             }
 
@@ -207,7 +208,7 @@ namespace DSSGBOAdmin.Models.DAL
                 try
                 {
                     connection.Open();
-                    string StrSQL = "SELECt * FROM RegistrationDemand order by Id desc";
+                    string StrSQL = "SELECt * FROM RegistrationDemand";
                     SqlCommand command = new SqlCommand(StrSQL, connection);
                     SqlDataReader dataReader = command.ExecuteReader();
                     if (dataReader != null)

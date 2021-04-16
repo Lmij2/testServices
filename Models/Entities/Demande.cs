@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DSSGBOAdmin.Models.Entities
+namespace AdminServiceGBO.Models.Entities
 {
     public class Demande
     {

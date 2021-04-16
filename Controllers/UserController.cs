@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DSSGBOAdmin.Models.BLL;
-using DSSGBOAdmin.Models.Entities;
-using Microsoft.AspNetCore.Cors;
+using AdminServiceGBO.Models.BLL;
+using AdminServiceGBO.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace DSSGBOAdmin.Controllers
+namespace AdminServiceGBO.Controllers
 {
     public enum WebsiteLanguage
     {
@@ -30,16 +28,18 @@ namespace DSSGBOAdmin.Controllers
             {
                 List<User> users = BLL_User.SelectAll(IdOrganization);
                 if (users != null && users.Count > 0)
-                    return Json(new { success = true, message = "Utlisateurs trouves", data = users });
+                    return Json(new { success = true, message = "Users found ", data = users });
                 else
-                    return Json(new { success = true, message = "Pas des utlisateurs pour cette organisation", data = users });
+                    return Json(new { success = true, message = "No User in the database for the organization", data = users });
 
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
+
+
 
         // GET api/<UserController>/5
         [HttpGet]
@@ -50,113 +50,94 @@ namespace DSSGBOAdmin.Controllers
             {
                 User user = BLL_User.SelectById(iduser);
                 if (user != null && user.Id > 0)
-                {
-                    return Json(new { success = true, message = "Utlisateur trouve", data = user });
-                }
+                    return Json(new { success = true, message = "User found", data = user });
                 else
-                {
-                    return Json(new { success = true, message = "Utilisateur introuvable.", data = user });
-                }
+                    return Json(new { success = true, message = "User not found in the database", data = user });
+                
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
 
         // POST api/<UserController>
-        [Route("")]
+        [Route("add")]
         [HttpPost]
-        //[ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public JsonResult Post([FromForm] User user)
         {
             try
             {
                 BLL_User.Add(user);
-                return Json(new { success = true, message = "Utilisateur ajouté avec success" });
+                return Json(new { success = true, message = "Ajouté avec success" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message ="Erreur serveur: "+ ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
 
         // PUT api/<UserController>/5
         [Route("{id:long}")]
         [HttpPut]
+        [ValidateAntiForgeryToken]
         public JsonResult Put(long id, [FromForm] User user)
         {
             try
             {
                 BLL_User.Update(id, user);
-                return Json(new { success = true, message = "Utilisateur modifié avec succès." });
+                return Json(new { success = true, message = "Modifié avec succès" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
 
-        [Route("{id}")]
-        [HttpDelete]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-        //[ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        //[ProducesDefaultResponseType]
+        [Route("{id:long}")]
+        [HttpDelete()]
         public JsonResult Delete(long id)
         {
             try
             {
-                //Response.Headers.Append("Access-Control-Allow-Origin", "*");
                 BLL_User.Delete(id);
-                return Json(new { success = true, message = "Utilisateur supprimé avec succès" });
+                return Json(new { success = true, message = "Supprimé avec succès" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Erreur serveur: " + ex.Message });
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
+
+
+
+
+
 
         // test connexion
         [Route("TestConnexion")]
         [HttpGet]
-        public KeyValuePair<List<User>, string> TestConnexion(string Name, string Password)
+        public List<User> TestConnexion(string Name, string Password,string message)
         {
             try
             {
-                string message;
-                //System.Diagnostics.Debug.WriteLine("message1=" + message);
-                List<User> Users = BLL_User.TestConnexion(Name, Password, out message);
-                System.Diagnostics.Debug.WriteLine("message2=" + message);
-                return new KeyValuePair<List<User>, string>(Users, message);
-
+                return BLL_User.TestConnexion(Name, Password, out message);
             }
             catch (Exception ex)
             {
-                return new KeyValuePair<List<User>, string>(new List<User>(), ex.Message);
+                throw ex;
             }
         }
         // rechercher compte utilisateur
         // test connexion
-        [Route("Login/RechercherCompte")]
+        [Route("TestConnexion")]
         [HttpGet]
-        public KeyValuePair<string, string> RechercherCompte(string Email)
+        public List<User> RechercherCompte(string Email, string message)
         {
             try
             {
-                List<User> ListUsers = new List<User>();
-                string message = "";
-                string JsonUsers = "";
-                if (ModelState.IsValid)
-                {
-                    ListUsers = BLL_User.RechercherCompteUser(Email, out message);
-                    if (ListUsers.Count != 0)
-                    {
-                        JsonUsers = JsonConvert.SerializeObject(ListUsers);
-                    }
-                }
-                return new KeyValuePair<string, string>(JsonUsers, message);
-                //return BLL_User.RechercherCompteUser(Email, out message);
+                return BLL_User.RechercherCompteUser(Email, out message);
             }
             catch (Exception ex)
             {
@@ -173,7 +154,7 @@ namespace DSSGBOAdmin.Controllers
         {
             try
             {
-                if (!BLL_User.CheckNameUnicity(name, idOrganization))
+                if (!BLL_User.CheckNameUnicityName(name, idOrganization))
                 {
                     switch (websiteLanguage)
                     {
@@ -183,9 +164,9 @@ namespace DSSGBOAdmin.Controllers
                 }
                 return new JsonResult(true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
         // test unicite Email
@@ -198,7 +179,7 @@ namespace DSSGBOAdmin.Controllers
         {
             try
             {
-                if (!BLL_User.CheckEmailUnicity(email, idOrganization))
+                if (!BLL_User.CheckNameUnicityEmail(email, idOrganization))
                 {
                     switch (websiteLanguage)
                     {
@@ -208,9 +189,9 @@ namespace DSSGBOAdmin.Controllers
                 }
                 return new JsonResult(true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
         // test l'unicite Name
@@ -224,7 +205,7 @@ namespace DSSGBOAdmin.Controllers
             try
             {
                 User currentUser = BLL_User.SelectById(id);
-                if (!currentUser.Name.Equals(name) && !BLL_User.CheckNameUnicity(name, idOrganization))
+                if (!currentUser.Name.Equals(name) && !BLL_User.CheckNameUnicityName(name, idOrganization))
                 {
                     switch (websiteLanguage)
                     {
@@ -234,9 +215,9 @@ namespace DSSGBOAdmin.Controllers
                 }
                 return new JsonResult(true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
         // test l'unicite Email
@@ -250,7 +231,7 @@ namespace DSSGBOAdmin.Controllers
             try
             {
                 User currentUser = BLL_User.SelectById(id);
-                if (!currentUser.Email.Equals(email) && !BLL_User.CheckEmailUnicity(email, idOrganization))
+                if (!currentUser.Email.Equals(email) && !BLL_User.CheckNameUnicityEmail(email, idOrganization))
                 {
                     switch (websiteLanguage)
                     {
@@ -260,9 +241,9 @@ namespace DSSGBOAdmin.Controllers
                 }
                 return new JsonResult(true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return Json(new { success = false, message = "Error server " + ex.Message });
             }
         }
         
